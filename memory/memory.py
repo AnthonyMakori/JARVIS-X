@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect("memory.db")
+conn = sqlite3.connect("memory.db", check_same_thread=False)
 c = conn.cursor()
 
 # Create table if not exists
