@@ -11,20 +11,28 @@ app.include_router(router)
 
 agent = BaseAgent("Jarvis")
 
-def run_voice_loop():
-    speak("Jarvis online and ready.")
 
+def start_api():
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)
+
+
+def run_voice_loop():
     while True:
         command = listen_for_command()
+
         if command:
             print(f"You: {command}")
             response = agent.run_task(command)
-            speak(response)
+
+            if response:
+                speak(response)
+
 
 if __name__ == "__main__":
-    # Start FastAPI in a separate thread
-    api_thread = threading.Thread(target=lambda: uvicorn.run(app, host="127.0.0.1", port=8000, reload=False))
+    # Start API in background
+    api_thread = threading.Thread(target=start_api)
+    api_thread.daemon = True
     api_thread.start()
 
-    # Run voice loop on main thread (important for mic)
+    # Run voice loop in main thread
     run_voice_loop()

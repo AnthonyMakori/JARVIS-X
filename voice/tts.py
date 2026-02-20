@@ -1,26 +1,38 @@
 import pyttsx3
 import datetime
+import threading
 
-engine = pyttsx3.init()
+_engine = None
+_engine_lock = threading.Lock()
 
-engine.setProperty("rate", 175)
-engine.setProperty("volume", 1.0)
 
-# 🔥 Force female voice
-voices = engine.getProperty("voices")
-for voice in voices:
-    if "female" in voice.name.lower():
-        engine.setProperty("voice", voice.id)
-        break
-else:
-    if len(voices) > 1:
-        engine.setProperty("voice", voices[1].id)
+def _init_engine():
+    global _engine
+    if _engine is None:
+        _engine = pyttsx3.init()
+        _engine.setProperty("rate", 175)
+        _engine.setProperty("volume", 1.0)
+
+        # Force female voice if available
+        voices = _engine.getProperty("voices")
+        for voice in voices:
+            if "female" in voice.name.lower():
+                _engine.setProperty("voice", voice.id)
+                break
+        else:
+            if len(voices) > 1:
+                _engine.setProperty("voice", voices[1].id)
 
 
 def speak(text):
-    print(f"Jarvis: {text}")
-    engine.say(text)
-    engine.runAndWait()
+    global _engine
+    with _engine_lock:
+        if _engine is None:
+            _init_engine()
+
+        print(f"Jarvis: {text}")
+        _engine.say(text)
+        _engine.runAndWait()
 
 
 def greet_user():
